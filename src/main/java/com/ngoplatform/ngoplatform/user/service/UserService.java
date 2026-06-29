@@ -9,6 +9,7 @@ import com.ngoplatform.ngoplatform.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ngoplatform.ngoplatform.common.exception.EmailAlreadyExistsException;
 
 @Service
 public class UserService {
@@ -28,7 +29,7 @@ public class UserService {
         // TODO: Replace RuntimeException with EmailAlreadyExistsException
         // when we implement Global Exception Handling.
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email is already registered");
+            throw new EmailAlreadyExistsException("Email is already registered");
         }
 
         User user = new User();
