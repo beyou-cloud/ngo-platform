@@ -1,5 +1,9 @@
 package com.ngoplatform.ngoplatform.user.service;
 
+import com.ngoplatform.ngoplatform.common.exception.EmailAlreadyExistsException;
+import com.ngoplatform.ngoplatform.common.exception.InvalidCredentialsException;
+import com.ngoplatform.ngoplatform.user.dto.LoginRequest;
+import com.ngoplatform.ngoplatform.user.dto.LoginResponse;
 import com.ngoplatform.ngoplatform.user.dto.RegisterRequest;
 import com.ngoplatform.ngoplatform.user.dto.RegisterResponse;
 import com.ngoplatform.ngoplatform.user.entity.User;
@@ -9,7 +13,6 @@ import com.ngoplatform.ngoplatform.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ngoplatform.ngoplatform.common.exception.EmailAlreadyExistsException;
 
 @Service
 public class UserService {
@@ -26,8 +29,6 @@ public class UserService {
     @Transactional
     public RegisterResponse registerUser(RegisterRequest request) {
 
-        // TODO: Replace RuntimeException with EmailAlreadyExistsException
-        // when we implement Global Exception Handling.
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException("Email is already registered");
         }
@@ -53,6 +54,26 @@ public class UserService {
                 savedUser.getFullName(),
                 savedUser.getEmail(),
                 "Registration successful"
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public LoginResponse loginUser(LoginRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() ->
+                        new InvalidCredentialsException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        return new LoginResponse(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole(),
+                "Login successful"
         );
     }
 }
